@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 import { BsTwitter } from 'react-icons/bs'
 import { BiSolidHomeCircle, BiSearch } from 'react-icons/bi'
@@ -6,7 +7,8 @@ import { RiFileListLine } from 'react-icons/ri'
 import { AiOutlineUser } from 'react-icons/ai'
 import { LuVerified } from 'react-icons/lu'
 import { CiCircleMore } from 'react-icons/ci'
-import FeedCard from '../../components/FeedCard';
+import FeedCard from './components/FeedCard';
+import { GoogleLogin } from '@react-oauth/google';
 
 
 export default function Home() {
@@ -65,7 +67,7 @@ export default function Home() {
   ]
   return (
     <div >
-      <div className="grid grid-cols-12 max-w-full w-screen h-screen pl-32 pr-56">
+      <div className="grid grid-cols-12 max-w-full w-screen h-screen pl-32 pr-32">
         <div className="col-span-3 mt-1 justify-start">
           <div className="rounded-full w-fit h-fit text-3xl p-3 hover:bg-gray-800 cursor-pointer transition-all">
             <BsTwitter />
@@ -92,7 +94,18 @@ export default function Home() {
           {<FeedCard />}
           {<FeedCard />}
         </div>
-        <div className="col-span-3"></div>
+        <div className="col-span-3 p-4">
+          <div className="bg-slate-800 p-4 rounded-xl overflow-hidden">
+            <GoogleLogin
+              onSuccess={credentialResponse => {
+                console.log(credentialResponse);
+              }}
+              onError={() => {
+                console.log('Login Failed');
+              }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   )

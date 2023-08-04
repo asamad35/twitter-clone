@@ -1,3 +1,4 @@
+import GoogleProvider from './providers/GoogleProvider'
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -14,9 +15,14 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  console.log(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!)
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <GoogleProvider>
+          {children}
+        </GoogleProvider>
+      </body>
     </html>
   )
 }
