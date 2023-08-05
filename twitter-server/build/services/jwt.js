@@ -9,10 +9,18 @@ class JWTService {
     generateTokenForUser(user) {
         const payload = {
             id: user === null || user === void 0 ? void 0 : user.id,
-            emial: user === null || user === void 0 ? void 0 : user.email
+            email: user === null || user === void 0 ? void 0 : user.email
         };
         const token = jsonwebtoken_1.default.sign(payload, JWT_SECRET);
         return token;
+    }
+    decodeToken(token) {
+        try {
+            return jsonwebtoken_1.default.verify(token, JWT_SECRET);
+        }
+        catch (error) {
+            return null;
+        }
     }
 }
 const jwtService = new JWTService();
