@@ -1,7 +1,7 @@
 'use client'
 import React, { useCallback, useMemo } from 'react';
 import { BsTwitter } from 'react-icons/bs'
-import { BiSolidHomeCircle, BiSearch } from 'react-icons/bi'
+import { BiSolidHomeCircle, BiSearch, BiImageAlt } from 'react-icons/bi'
 import { BsBell, BsEnvelope, BsPeople } from 'react-icons/bs'
 import { RiFileListLine } from 'react-icons/ri'
 import { AiOutlineUser } from 'react-icons/ai'
@@ -85,12 +85,19 @@ export default function Home() {
       const { verifyGoogleToken } = await graphqlClient.request(verifyUserGoogleTokenQuery, { token: googleToken })
       if (verifyGoogleToken) window.localStorage.setItem('twitter_google_token', verifyGoogleToken)
       // refetch data by invalidating
-      console.log(window.localStorage.getItem('twitter_google_token'))
       await queryClient.invalidateQueries(['current-user'])
       toast.success('Verified Success')
     },
     [queryClient],
   )
+
+  const handleSelectImage = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+
+    input.click();
+  }, []);
 
   return (
     <div >
@@ -120,6 +127,43 @@ export default function Home() {
           </div>
         </div>
         <div className="col-span-6 border h-screen overflow-y-scroll no-scrollbar border-gray-600">
+
+          <div>
+            <div className="border border-r-0 border-l-0 border-b-0 border-gray-600 p-5 hover:bg-slate-900 transition-all cursor-pointer">
+              <div className="grid grid-cols-12 gap-3">
+                <div className="col-span-1">
+                  {user?.profileImageURL && (
+                    <Image
+                      className="rounded-full"
+                      src={user?.profileImageURL}
+                      alt="user-image"
+                      height={50}
+                      width={50}
+                    />
+                  )}
+                </div>
+                <div className="col-span-11">
+                  <textarea
+                    // value={content}
+                    // onChange={(e) => setContent(e.target.value)}
+                    className="w-full bg-transparent text-xl px-3 border-b border-slate-700 focus:outline-none"
+                    placeholder="What's happening?"
+                    rows={3}
+                  ></textarea>
+                  <div className="mt-2 flex justify-between items-center">
+                    <BiImageAlt onClick={handleSelectImage} className="text-xl" />
+                    <button
+                      className="bg-[#1d9bf0] font-semibold text-sm py-2 px-4 rounded-full"
+                    >
+                      Tweet
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
           {<FeedCard />}
           {<FeedCard />}
           {<FeedCard />}
