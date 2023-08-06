@@ -1,5 +1,5 @@
 'use client'
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useState } from 'react';
 import { BsTwitter } from 'react-icons/bs'
 import { BiSolidHomeCircle, BiSearch, BiImageAlt } from 'react-icons/bi'
 import { BsBell, BsEnvelope, BsPeople } from 'react-icons/bs'
@@ -15,6 +15,8 @@ import { verifyUserGoogleTokenQuery } from '../../graphql/query/user';
 import { useCurrentUser } from '../../hooks/user';
 import { useQueryClient } from '@tanstack/react-query'
 import Image from 'next/image';
+import { useCreateTweet, useGetAllTweets } from '../../hooks/tweet';
+import { Tweet } from '../../gql/graphql';
 
 interface TwitterSidebarButton {
   title: string,
@@ -74,7 +76,11 @@ const sidebarItems: TwitterSidebarButton[] = [
 
 export default function Home() {
   const { user } = useCurrentUser()
+  const { tweets = [] } = useGetAllTweets()
   const queryClient = useQueryClient()
+  const { mutate } = useCreateTweet()
+
+  const [content, setContent] = useState("")
 
   const handleLoginWithGoogle = useCallback(
     async (cred: CredentialResponse) => {
@@ -89,6 +95,14 @@ export default function Home() {
       toast.success('Verified Success')
     },
     [queryClient],
+  )
+  const handleCreateTweet = useCallback(
+    () => {
+      mutate({
+        content
+      })
+    },
+    [content, mutate],
   )
 
   const handleSelectImage = useCallback(() => {
@@ -144,8 +158,8 @@ export default function Home() {
                 </div>
                 <div className="col-span-11">
                   <textarea
-                    // value={content}
-                    // onChange={(e) => setContent(e.target.value)}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
                     className="w-full bg-transparent text-xl px-3 border-b border-slate-700 focus:outline-none"
                     placeholder="What's happening?"
                     rows={3}
@@ -153,6 +167,7 @@ export default function Home() {
                   <div className="mt-2 flex justify-between items-center">
                     <BiImageAlt onClick={handleSelectImage} className="text-xl" />
                     <button
+                      onClick={handleCreateTweet}
                       className="bg-[#1d9bf0] font-semibold text-sm py-2 px-4 rounded-full"
                     >
                       Tweet
@@ -163,12 +178,7 @@ export default function Home() {
             </div>
           </div>
 
-
-          {<FeedCard />}
-          {<FeedCard />}
-          {<FeedCard />}
-          {<FeedCard />}
-          {<FeedCard />}
+          {tweets?.map((tweet) => tweet ? <FeedCard key={tweet?.id} data={tweet as Tweet} /> : null)}
         </div>
         <div className="col-span-3 p-4 ">
           {!user &&
