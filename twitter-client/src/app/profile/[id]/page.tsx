@@ -1,15 +1,10 @@
-'use client'
-import TwitterLayout from '@/app/components/Layout/TwitterLayout'
-import React from 'react'
+import UserProfile from '@/app/components/UserProfile'
 
-const UserProfilePage = () => {
+const UserProfilePage = ({ params }: { params: { id: string } }) => {
     return (
         <div>
-            <TwitterLayout>
-                dqdqwwd
-            </TwitterLayout>
+            <UserProfile id={params.id} />
         </div>
     )
 }
-
 export default UserProfilePage

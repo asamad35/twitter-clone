@@ -1,76 +1,26 @@
+"use client"
 import { CredentialResponse, GoogleLogin } from '@react-oauth/google';
-import React, { useCallback } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { AiOutlineUser } from 'react-icons/ai';
-import { BiImageAlt, BiSearch, BiSolidHomeCircle } from 'react-icons/bi';
+import { BiSearch, BiSolidHomeCircle } from 'react-icons/bi';
 import { BsBell, BsEnvelope, BsPeople, BsTwitter } from 'react-icons/bs';
 import { CiCircleMore } from 'react-icons/ci';
 import { LuVerified } from 'react-icons/lu';
 import { RiFileListLine } from 'react-icons/ri';
-import { Tweet } from '../../../../gql/graphql';
-import FeedCard from '../FeedCard';
 import { useCurrentUser } from '../../../../hooks/user';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { graphqlClient } from '../../../../client/api';
 import { verifyUserGoogleTokenQuery } from '../../../../graphql/query/user';
 import { useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 
 
 interface TwitterSidebarButton {
     title: string,
-    icon: React.ReactNode
+    icon: React.ReactNode,
+    link: string
 }
-
-const sidebarItems: TwitterSidebarButton[] = [
-    {
-        title: 'Home',
-        icon: <BiSolidHomeCircle />
-
-    },
-    {
-        title: 'Explore',
-        icon: <BiSearch />
-
-    },
-    {
-        title: 'Notification',
-        icon: <BsBell />
-
-    },
-    {
-        title: 'Messages',
-        icon: <BsEnvelope />
-
-    },
-    {
-        title: 'Lists',
-        icon: <RiFileListLine />
-
-    },
-    {
-        title: 'Communities',
-        icon: <BsPeople />
-
-    },
-    {
-        title: 'Verified',
-        icon: <LuVerified />
-
-    },
-    {
-        title: 'Profile',
-        icon: <AiOutlineUser />
-
-    },
-    {
-        title: 'More',
-        icon: <CiCircleMore />
-
-    }
-
-]
-
-
 
 
 const TwitterLayout = ({
@@ -78,8 +28,70 @@ const TwitterLayout = ({
 }: {
     children: React.ReactNode
 }) => {
+
     const { user } = useCurrentUser()
     const queryClient = useQueryClient()
+
+
+    const sidebarItems: TwitterSidebarButton[] = useMemo(() => [
+        {
+            title: 'Home',
+            icon: <BiSolidHomeCircle />,
+            link: '/'
+
+        },
+        {
+            title: 'Explore',
+            icon: <BiSearch />,
+            link: '/'
+
+        },
+        {
+            title: 'Notification',
+            icon: <BsBell />,
+            link: '/'
+
+        },
+        {
+            title: 'Messages',
+            icon: <BsEnvelope />,
+            link: '/'
+
+        },
+        {
+            title: 'Lists',
+            icon: <RiFileListLine />,
+            link: '/'
+
+        },
+        {
+            title: 'Communities',
+            icon: <BsPeople />,
+            link: '/'
+
+        },
+        {
+            title: 'Verified',
+            icon: <LuVerified />,
+            link: '/'
+
+        },
+        {
+            title: 'Profile',
+            icon: <AiOutlineUser />,
+            link: `/profile/${user?.id}`
+
+        },
+        {
+            title: 'More',
+            icon: <CiCircleMore />,
+            link: '/'
+
+        }
+
+    ]
+
+        , [user?.id])
 
     const handleLoginWithGoogle = useCallback(
         async (cred: CredentialResponse) => {
@@ -106,9 +118,11 @@ const TwitterLayout = ({
                     <div className="mt-2 text-xl mr-8">
                         <ul className='relative'>
                             {sidebarItems.map((el) =>
-                                <li className='flex justify-start items-center mt-2 gap-4 hover:bg-gray-800 transition-all cursor-pointer w-fit rounded-full py-2 px-4' key={el.title}>
-                                    <span>{el.icon}</span>
-                                    <span className='hidden sm:inline' >{el.title}</span>
+                                <li className=' mt-2 hover:bg-gray-800 transition-all cursor-pointer w-fit rounded-full py-2 px-4' key={el.title}>
+                                    <Link className=' gap-4 flex justify-start items-center' href={el.link}>
+                                        <span>{el.icon}</span>
+                                        <span className='hidden sm:inline' >{el.title}</span>
+                                    </Link>
                                 </li>
                             )}
                         </ul>
@@ -126,7 +140,7 @@ const TwitterLayout = ({
             <div className="col-span-10 sm:col-span-6 border h-screen overflow-y-scroll no-scrollbar border-gray-600">
                 {children}
             </div>
-            <div className="hidden sm:col-span-3 p-4 ">
+            <div className=" sm:col-span-3 p-4 ">
                 {!user &&
                     <div className="bg-slate-800 p-4 rounded-xl overflow-hidden">
                         <GoogleLogin
