@@ -17,17 +17,17 @@ export const useGetAllTweets = () => {
 }
 
 export const useCreateTweet = () => {
-    const router = useRouter()
-    // const queryClient = useQueryClient()
+    // const router = useRouter()
+    const queryClient = useQueryClient()
     const mutation = useMutation({
         mutationFn: (payload: CreateTweetData) => graphqlClient.request(createTweetMutation, { payload }),
         onMutate: () => {
             toast.loading("Creating tweet", { id: '1' });
         },
         onSuccess: () => {
-            router.refresh()
+            // router.refresh()
 
-            // queryClient.invalidateQueries(['all-tweets'])
+            queryClient.invalidateQueries(['all-tweets'])
 
             toast.success("Created Succesfully", { id: '1' })
 

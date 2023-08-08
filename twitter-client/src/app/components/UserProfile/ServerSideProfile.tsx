@@ -6,7 +6,6 @@ import { User } from '../../../../gql/graphql';
 
 const ServerSideProfile = async ({ id }: { id: string }) => {
     const userInfo = await graphqlClient.request(getUserByIdQuery, { id });
-    console.log({ userInfo })
     return (
         <div>
             <div>ServerSideProfile</div>

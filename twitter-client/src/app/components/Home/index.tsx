@@ -1,12 +1,12 @@
-import React from 'react'
 import HomeClient from './HomeClient'
-import AllTweets from '../AllTweets'
+import { graphqlClient } from '../../../../client/api'
+import { getAllTweetsQuery } from '../../../../graphql/query/tweet'
+import { Tweet } from '../../../../gql/graphql'
 
-const Home = () => {
+const Home = async () => {
+    const tweets = await graphqlClient.request(getAllTweetsQuery)
     return (
-        <HomeClient>
-            <AllTweets />
-        </HomeClient>
+        <HomeClient allTweets={tweets.getAllTweets as Tweet[]} />
     )
 }
 

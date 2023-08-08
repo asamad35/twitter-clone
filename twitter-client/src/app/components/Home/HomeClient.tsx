@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { BiImageAlt } from "react-icons/bi"
-import { useCreateTweet } from "../../../../hooks/tweet"
+import { useCreateTweet, useGetAllTweets } from "../../../../hooks/tweet"
 import { useCurrentUser } from "../../../../hooks/user"
 import TwitterLayout from "../Layout/TwitterLayout"
 import Image from 'next/image';
@@ -10,17 +10,17 @@ import { graphqlClient } from "../../../../client/api"
 import { getSignedURLForTweetQuery } from "../../../../graphql/query/user"
 import axios from "axios"
 import { toast } from "react-hot-toast"
+import { Tweet } from "../../../../gql/graphql"
+import FeedCard from "../FeedCard"
 
 
-const HomeClient = ({ children }: { children: React.ReactNode }) => {
+const HomeClient = ({ allTweets }: { allTweets: Tweet[] }) => {
     const [content, setContent] = useState("")
     const [imageURL, setImageURL] = useState("")
+    const { tweets = allTweets as Tweet[] } = useGetAllTweets()
 
     const { user } = useCurrentUser()
     const { mutateAsync } = useCreateTweet()
-
-
-
 
     const handleCreateTweet = useCallback(
         async () => {
@@ -38,7 +38,6 @@ const HomeClient = ({ children }: { children: React.ReactNode }) => {
     const handleInputChangeFile = useCallback((input: HTMLInputElement) => {
         return async (event: Event) => {
             event.preventDefault();
-            console.log(input.files)
 
             const file: File | null | undefined = input.files?.item(0)
             if (!file) return
@@ -58,7 +57,6 @@ const HomeClient = ({ children }: { children: React.ReactNode }) => {
 
                 const url = new URL(getSignedURLForTweet);
                 const myFilePath = `${url.origin}${url.pathname}`
-                console.log(myFilePath)
                 setImageURL(myFilePath)
 
             }
@@ -115,7 +113,7 @@ const HomeClient = ({ children }: { children: React.ReactNode }) => {
                         </div>
                     </div>
                 </div>
-                {children}
+                {tweets?.map((tweet) => tweet ? <FeedCard key={tweet?.id} data={tweet as Tweet} /> : null)}
             </TwitterLayout>
 
         </div>

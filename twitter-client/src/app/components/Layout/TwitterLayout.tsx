@@ -32,7 +32,6 @@ const TwitterLayout = ({
     const { user } = useCurrentUser()
     const queryClient = useQueryClient()
 
-
     const sidebarItems: TwitterSidebarButton[] = useMemo(() => [
         {
             title: 'Home',
