@@ -4,7 +4,7 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { User } from './user'
 import { Tweet } from './tweet'
 import cors from 'cors'
-import jwtService from '../services/jwt';
+import jwtService from '../services/jwtService';
 import { GraphqlContext } from '../interfaces';
 
 export async function initServer() {

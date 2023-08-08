@@ -19,7 +19,7 @@ const express4_1 = require("@apollo/server/express4");
 const user_1 = require("./user");
 const tweet_1 = require("./tweet");
 const cors_1 = __importDefault(require("cors"));
-const jwt_1 = __importDefault(require("../services/jwt"));
+const jwtService_1 = __importDefault(require("../services/jwtService"));
 function initServer() {
     return __awaiter(this, void 0, void 0, function* () {
         const app = (0, express_1.default)();
@@ -46,7 +46,7 @@ function initServer() {
             context: ({ req, res }) => __awaiter(this, void 0, void 0, function* () {
                 return {
                     user: req.headers.authorization ?
-                        jwt_1.default.decodeToken(req.headers.authorization.split("Bearer ")[1]) :
+                        jwtService_1.default.decodeToken(req.headers.authorization.split("Bearer ")[1]) :
                         undefined
                 };
             })

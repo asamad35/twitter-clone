@@ -8,30 +8,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolvers = void 0;
-const db_1 = require("../../client/db");
+const userService_1 = __importDefault(require("../../services/userService"));
+const tweetService_1 = __importDefault(require("../../services/tweetService"));
 const queries = {
-    getAllTweets: () => db_1.prismaClient.tweet.findMany({ orderBy: { createdAt: 'desc' } })
+    getAllTweets: () => __awaiter(void 0, void 0, void 0, function* () { return yield tweetService_1.default.getAllTweets(); }),
+    getSignedURLForTweet: (parent, { imageType, imageName }, ctx) => __awaiter(void 0, void 0, void 0, function* () {
+        const signedURL = yield tweetService_1.default.getSignedURLForTweet({ imageType, imageName, ctx });
+        return signedURL;
+    })
 };
 const mutations = {
     createTweet: (parent, { payload }, ctx) => __awaiter(void 0, void 0, void 0, function* () {
-        if (!ctx.user) {
-            throw new Error("You are not authenticated");
-        }
-        const tweet = yield db_1.prismaClient.tweet.create({
-            data: {
-                content: payload.content,
-                imageURL: payload.imageURL,
-                author: { connect: { id: ctx.user.id } }
-            }
-        });
+        const tweet = yield tweetService_1.default.createTweet({ payload, ctx });
         return tweet;
     })
 };
 const extraResolvers = {
     Tweet: {
-        author: (parent) => db_1.prismaClient.user.findUnique({ where: { id: parent.authorId } })
+        author: (parent) => __awaiter(void 0, void 0, void 0, function* () { return yield userService_1.default.getUserById(parent.authorId); })
     }
 };
 exports.resolvers = { mutations, extraResolvers, queries };

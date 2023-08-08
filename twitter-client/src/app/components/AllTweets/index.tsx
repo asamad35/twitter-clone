@@ -6,7 +6,7 @@ import { Tweet } from '../../../../gql/graphql'
 
 const AllTweets = async () => {
     const tweets = await graphqlClient.request(getAllTweetsQuery)
-    console.log({ tweets },'dwdwdwdwdwdwaaa')
+    console.log({ tweets }, 'dwdwdwdwdwdwaaa')
     return (
         <>
             {tweets.getAllTweets?.map((tweet) => tweet ? <FeedCard key={tweet?.id} data={tweet as Tweet} /> : null)}

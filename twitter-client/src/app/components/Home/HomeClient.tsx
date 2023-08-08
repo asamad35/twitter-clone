@@ -6,31 +6,75 @@ import { useCreateTweet } from "../../../../hooks/tweet"
 import { useCurrentUser } from "../../../../hooks/user"
 import TwitterLayout from "../Layout/TwitterLayout"
 import Image from 'next/image';
+import { graphqlClient } from "../../../../client/api"
+import { getSignedURLForTweetQuery } from "../../../../graphql/query/user"
+import axios from "axios"
+import { toast } from "react-hot-toast"
 
 
 const HomeClient = ({ children }: { children: React.ReactNode }) => {
+    const [content, setContent] = useState("")
+    const [imageURL, setImageURL] = useState("")
 
     const { user } = useCurrentUser()
-    const { mutate } = useCreateTweet()
-    const [content, setContent] = useState("")
+    const { mutateAsync } = useCreateTweet()
+
+
 
 
     const handleCreateTweet = useCallback(
-        () => {
-            mutate({
-                content
+        async () => {
+            await mutateAsync({
+                content,
+                imageURL
             })
+
+            setContent('')
+            setImageURL('')
         },
-        [content, mutate],
+        [content, mutateAsync, imageURL],
     )
+
+    const handleInputChangeFile = useCallback((input: HTMLInputElement) => {
+        return async (event: Event) => {
+            event.preventDefault();
+            console.log(input.files)
+
+            const file: File | null | undefined = input.files?.item(0)
+            if (!file) return
+
+            const { getSignedURLForTweet } = await graphqlClient.request(getSignedURLForTweetQuery, {
+                imageName: file.name,
+                imageType: file.type
+            })
+
+            if (getSignedURLForTweet) {
+                toast.loading("uploading", { id: '1' })
+                await axios.put(getSignedURLForTweet, file, {
+                    headers: { 'Content-Type': file.type }
+                })
+
+                toast.success("successfully uploaded", { id: '1' })
+
+                const url = new URL(getSignedURLForTweet);
+                const myFilePath = `${url.origin}${url.pathname}`
+                console.log(myFilePath)
+                setImageURL(myFilePath)
+
+            }
+        }
+    }, [])
 
     const handleSelectImage = useCallback(() => {
         const input = document.createElement("input");
         input.setAttribute("type", "file");
         input.setAttribute("accept", "image/*");
+        const handlerFn = handleInputChangeFile(input)
+
+        input.addEventListener("change", handlerFn)
 
         input.click();
-    }, []);
+    }, [handleInputChangeFile]);
 
     return (
         <div >
@@ -57,6 +101,7 @@ const HomeClient = ({ children }: { children: React.ReactNode }) => {
                                     placeholder="What's happening?"
                                     rows={3}
                                 ></textarea>
+                                {imageURL && <Image src={imageURL} alt='tweet-image' width={300} height={300} />}
                                 <div className="mt-2 flex justify-between items-center">
                                     <BiImageAlt onClick={handleSelectImage} className="text-xl" />
                                     <button

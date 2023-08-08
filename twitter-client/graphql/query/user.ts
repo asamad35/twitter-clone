@@ -46,3 +46,9 @@ export const getUserByIdQuery = graphql(`#graphql
         }
     }
 `)
+
+export const getSignedURLForTweetQuery = graphql(`#graphql
+    query getSignedURLForTweet($imageType: String!, $imageName: String!) {
+        getSignedURLForTweet(imageType: $imageType, imageName: $imageName)
+}
+`)

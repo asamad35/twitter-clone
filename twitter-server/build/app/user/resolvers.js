@@ -13,39 +13,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolvers = void 0;
-const axios_1 = __importDefault(require("axios"));
 const db_1 = require("../../client/db");
-const jwt_1 = __importDefault(require("../../services/jwt"));
+const userService_1 = __importDefault(require("../../services/userService"));
 const queries = {
     verifyGoogleToken: (parent, { token }) => __awaiter(void 0, void 0, void 0, function* () {
-        const googleToken = token;
-        const googleOauthURL = new URL('https://oauth2.googleapis.com/tokeninfo');
-        googleOauthURL.searchParams.set('id_token', googleToken);
-        const { data } = yield axios_1.default.get(`${googleOauthURL}`);
-        let user = yield db_1.prismaClient.user.findUnique({ where: { email: data.email } });
-        if (!user) {
-            user = yield db_1.prismaClient.user.create({
-                data: {
-                    email: data.email,
-                    firstname: data.given_name,
-                    lastname: data.family_name,
-                    profileImageURL: data.picture
-                }
-            });
-        }
-        const userToken = jwt_1.default.generateTokenForUser(user);
-        return userToken;
+        const resultToken = yield userService_1.default.verifyGoogleToken(token);
+        return resultToken;
     }),
     getCurrentUser: (parent, args, ctx) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a;
-        const id = (_a = ctx === null || ctx === void 0 ? void 0 : ctx.user) === null || _a === void 0 ? void 0 : _a.id;
-        if (!id)
-            return null;
-        const user = yield db_1.prismaClient.user.findUnique({ where: { id } });
+        const user = yield userService_1.default.getCurrentUser(ctx);
         return user;
     }),
     getUserById: (parent, { id }) => __awaiter(void 0, void 0, void 0, function* () {
-        const user = yield db_1.prismaClient.user.findUnique({ where: { id: id } });
+        const user = yield userService_1.default.getUserById(id);
         return user;
     })
 };
