@@ -58,7 +58,9 @@ const mutations = {
     unfollowUser: (parent, { to }, ctx) => __awaiter(void 0, void 0, void 0, function* () {
         if (!ctx.user || !ctx.user.id)
             throw new Error("Unauthenticated");
+        console.log({ from: ctx.user.id, to: to });
         yield userService_1.default.unfollowUser({ from: ctx.user.id, to: to });
+        return true;
     }),
 };
 exports.resolvers = { queries, extraResolvers, mutations };

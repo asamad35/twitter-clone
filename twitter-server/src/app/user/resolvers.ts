@@ -56,7 +56,10 @@ const mutations = {
 
     unfollowUser: async (parent: any, { to }: { to: string }, ctx: GraphqlContext) => {
         if (!ctx.user || !ctx.user.id) throw new Error("Unauthenticated")
+        console.log({ from: ctx.user.id, to: to })
+
         await userService.unfollowUser({ from: ctx.user.id, to: to })
+        return true
     },
 
 

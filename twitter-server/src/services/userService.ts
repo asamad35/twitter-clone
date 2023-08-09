@@ -66,7 +66,6 @@ class UserService {
     }
 
     async followUser({ from, to }: { from: string, to: string }) {
-        console.log(from, to)
         const res = await prismaClient.follows.create({
             data: {
                 follower: { connect: { id: from } },
@@ -77,6 +76,8 @@ class UserService {
     }
 
     async unfollowUser({ from, to }: { from: string, to: string }) {
+        console.log(from, to)
+
         return await prismaClient.follows.delete({ where: { followerId_followingId: { followerId: from, followingId: to } } })
     }
 }
