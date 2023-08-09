@@ -64,6 +64,21 @@ class UserService {
         const user = await prismaClient.user.findUnique({ where: { id: id } })
         return user
     }
+
+    async followUser({ from, to }: { from: string, to: string }) {
+        console.log(from, to)
+        const res = await prismaClient.follows.create({
+            data: {
+                follower: { connect: { id: from } },
+                following: { connect: { id: to } }
+            }
+        })
+        return res
+    }
+
+    async unfollowUser({ from, to }: { from: string, to: string }) {
+        return await prismaClient.follows.delete({ where: { followerId_followingId: { followerId: from, followingId: to } } })
+    }
 }
 
 const userService = new UserService()

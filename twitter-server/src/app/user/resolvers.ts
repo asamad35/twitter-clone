@@ -25,8 +25,41 @@ const queries = {
 
 const extraResolvers = {
     User: {
-        tweets: (parent: User) => prismaClient.tweet.findMany({ where: { authorId: parent.id } })
+        tweets: (parent: User) => prismaClient.tweet.findMany({ where: { authorId: parent.id } }),
+
+        followers: async (parent: User) => {
+            const followersList = await prismaClient.follows.findMany({
+                where: { following: { id: parent.id } },
+                include: { follower: true }
+            })
+            return followersList.map(el => el.follower)
+        },
+
+        followings: async (parent: User) => {
+            const followingsList = await prismaClient.follows.findMany({
+                where: { follower: { id: parent.id } },
+                include: { following: true }
+            })
+            return followingsList.map(el => el.following)
+        }
     }
+
+
 }
 
-export const resolvers = { queries, extraResolvers }
+const mutations = {
+    followUser: async (parent: any, { to }: { to: string }, ctx: GraphqlContext) => {
+        if (!ctx.user || !ctx.user.id) throw new Error("Unauthenticated")
+        await userService.followUser({ from: ctx.user.id, to: to })
+        return true
+    },
+
+    unfollowUser: async (parent: any, { to }: { to: string }, ctx: GraphqlContext) => {
+        if (!ctx.user || !ctx.user.id) throw new Error("Unauthenticated")
+        await userService.unfollowUser({ from: ctx.user.id, to: to })
+    },
+
+
+}
+
+export const resolvers = { queries, extraResolvers, mutations }
