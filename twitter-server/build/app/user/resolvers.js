@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolvers = void 0;
 const db_1 = require("../../client/db");
 const userService_1 = __importDefault(require("../../services/userService"));
+const redis_1 = __importDefault(require("../../client/redis"));
 const queries = {
     verifyGoogleToken: (parent, { token }) => __awaiter(void 0, void 0, void 0, function* () {
         const resultToken = yield userService_1.default.verifyGoogleToken(token);
@@ -45,14 +46,48 @@ const extraResolvers = {
                 include: { following: true }
             });
             return followingsList.map(el => el.following);
-        })
-    }
+        }),
+        recommendedUsers: (parent, _, ctx) => __awaiter(void 0, void 0, void 0, function* () {
+            if (!ctx.user)
+                return [];
+            const cachedValue = yield redis_1.default.get(`RECOMMENDED_USERS:${ctx.user.id}`);
+            if (cachedValue) {
+                console.log("cached Found");
+                return JSON.parse(cachedValue);
+            }
+            ;
+            yield new Promise((res, rej) => { setTimeout(() => res, 3000); });
+            const myFollowings = yield db_1.prismaClient.follows.findMany({
+                where: {
+                    follower: { id: ctx.user.id },
+                },
+                include: {
+                    following: {
+                        include: { followers: { include: { following: true } } },
+                    },
+                },
+            });
+            const users = [];
+            for (const followings of myFollowings) {
+                for (const followingOfFollowedUser of followings.following.followers) {
+                    if (followingOfFollowedUser.following.id !== ctx.user.id &&
+                        myFollowings.findIndex((e) => (e === null || e === void 0 ? void 0 : e.followingId) === followingOfFollowedUser.following.id) < 0) {
+                        users.push(followingOfFollowedUser.following);
+                    }
+                }
+            }
+            console.log("No cached Found");
+            yield redis_1.default.set(`RECOMMENDED_USERS:${ctx.user.id}`, JSON.stringify(users));
+            return users;
+        }),
+    },
 };
 const mutations = {
     followUser: (parent, { to }, ctx) => __awaiter(void 0, void 0, void 0, function* () {
         if (!ctx.user || !ctx.user.id)
             throw new Error("Unauthenticated");
         yield userService_1.default.followUser({ from: ctx.user.id, to: to });
+        yield redis_1.default.del(`RECOMMENDED_USERS:${ctx.user.id}`);
         return true;
     }),
     unfollowUser: (parent, { to }, ctx) => __awaiter(void 0, void 0, void 0, function* () {

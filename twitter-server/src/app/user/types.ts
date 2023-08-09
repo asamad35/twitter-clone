@@ -11,6 +11,8 @@ export const types = `#graphql
         followers: [User]
         followings: [User]
 
+        recommendedUsers: [User]
+
     }
 
 

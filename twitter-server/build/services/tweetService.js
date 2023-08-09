@@ -8,10 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const db_1 = require("../client/db");
+const redis_1 = __importDefault(require("../client/redis"));
 const s3Client = new client_s3_1.S3Client({
     region: 'ap-south-1',
     credentials: {
@@ -22,7 +26,12 @@ const s3Client = new client_s3_1.S3Client({
 class TweetService {
     getAllTweets() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.prismaClient.tweet.findMany({ orderBy: { createdAt: 'desc' } });
+            const cachedTweets = yield redis_1.default.get("ALL_TWEETS");
+            if (cachedTweets)
+                return JSON.parse(cachedTweets);
+            const tweets = yield db_1.prismaClient.tweet.findMany({ orderBy: { createdAt: 'desc' } });
+            yield redis_1.default.set("ALL_TWEETS", JSON.stringify(tweets));
+            return tweets;
         });
     }
     getSignedURLForTweet({ imageType, imageName, ctx }) {
@@ -45,6 +54,9 @@ class TweetService {
             if (!ctx.user) {
                 throw new Error("You are not authenticated");
             }
+            const rateLimitFlag = yield redis_1.default.get(`RATE_LIMIT:TWEET:${ctx.user.id}`);
+            if (rateLimitFlag)
+                throw new Error("Please wait before creating a new tweet");
             const tweet = yield db_1.prismaClient.tweet.create({
                 data: {
                     content: payload.content,
@@ -52,6 +64,8 @@ class TweetService {
                     author: { connect: { id: ctx.user.id } }
                 }
             });
+            yield redis_1.default.setex(`RATE_LIMIT:TWEET:${ctx.user.id}`, 10, 1);
+            yield redis_1.default.del("ALL_TWEETS");
             return tweet;
         });
     }

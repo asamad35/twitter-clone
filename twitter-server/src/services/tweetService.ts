@@ -2,6 +2,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { prismaClient } from "../client/db";
 import { GraphqlContext } from "../interfaces";
+import redisClient from "../client/redis";
 
 
 
@@ -22,7 +23,12 @@ const s3Client = new S3Client({
 
 class TweetService {
     async getAllTweets() {
-        return await prismaClient.tweet.findMany({ orderBy: { createdAt: 'desc' } })
+        const cachedTweets = await redisClient.get("ALL_TWEETS");
+        if (cachedTweets) return JSON.parse(cachedTweets);
+
+        const tweets = await prismaClient.tweet.findMany({ orderBy: { createdAt: 'desc' } })
+        await redisClient.set("ALL_TWEETS", JSON.stringify(tweets))
+        return tweets
     }
 
     async getSignedURLForTweet({ imageType, imageName, ctx }: { imageType: string, imageName: string, ctx: GraphqlContext }) {
@@ -46,6 +52,9 @@ class TweetService {
             throw new Error("You are not authenticated")
         }
 
+        const rateLimitFlag = await redisClient.get(`RATE_LIMIT:TWEET:${ctx.user.id}`)
+        if (rateLimitFlag) throw new Error("Please wait before creating a new tweet")
+
         const tweet = await prismaClient.tweet.create({
             data: {
                 content: payload.content,
@@ -53,7 +62,8 @@ class TweetService {
                 author: { connect: { id: ctx.user.id } }
             }
         })
-
+        await redisClient.setex(`RATE_LIMIT:TWEET:${ctx.user.id}`, 10, 1)
+        await redisClient.del("ALL_TWEETS")
         return tweet
     }
 }
