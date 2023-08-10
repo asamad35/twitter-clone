@@ -44,43 +44,45 @@ const extraResolvers = {
             return followingsList.map(el => el.following)
         },
         recommendedUsers: async (parent: User, _: any, ctx: GraphqlContext) => {
-            if (!ctx.user) return [];
-
-            const cachedValue = await redisClient.get(`RECOMMENDED_USERS:${ctx.user.id}`)
-            if (cachedValue) {
-                console.log("cached Found")
-                return JSON.parse(cachedValue)
-            };
-            await new Promise((res, rej) => { setTimeout(() => res, 3000) })
-            const myFollowings = await prismaClient.follows.findMany({
-                where: {
-                    follower: { id: ctx.user.id },
-                },
-                include: {
-                    following: {
-                        include: { followers: { include: { following: true } } },
+            try {
+                if (!ctx.user) return [];
+                const cachedValue = await redisClient.get(`RECOMMENDED_USERS:${ctx.user.id}`)
+                if (cachedValue) {
+                    console.log("cached Found")
+                    return JSON.parse(cachedValue)
+                };
+                const myFollowings = await prismaClient.follows.findMany({
+                    where: {
+                        follower: { id: ctx.user.id },
                     },
-                },
-            });
+                    include: {
+                        following: {
+                            include: { followers: { include: { following: true } } },
+                        },
+                    },
+                });
 
-            const users: User[] = [];
+                const users: User[] = [];
 
-            for (const followings of myFollowings) {
-                for (const followingOfFollowedUser of followings.following.followers) {
-                    if (
-                        followingOfFollowedUser.following.id !== ctx.user.id &&
-                        myFollowings.findIndex(
-                            (e) => e?.followingId === followingOfFollowedUser.following.id
-                        ) < 0
-                    ) {
-                        users.push(followingOfFollowedUser.following);
+                for (const followings of myFollowings) {
+                    for (const followingOfFollowedUser of followings.following.followers) {
+                        if (
+                            followingOfFollowedUser.following.id !== ctx.user.id &&
+                            myFollowings.findIndex(
+                                (e) => e?.followingId === followingOfFollowedUser.following.id
+                            ) < 0
+                        ) {
+                            users.push(followingOfFollowedUser.following);
+                        }
                     }
                 }
-            }
-            console.log("No cached Found")
-            await redisClient.set(`RECOMMENDED_USERS:${ctx.user.id}`, JSON.stringify(users))
+                console.log("No cached Found")
+                await redisClient.set(`RECOMMENDED_USERS:${ctx.user.id}`, JSON.stringify(users))
 
-            return users;
+                return users;
+            } catch (error) {
+                return []
+            }
         },
     },
 };

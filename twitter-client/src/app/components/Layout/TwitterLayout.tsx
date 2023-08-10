@@ -29,8 +29,8 @@ const TwitterLayout = ({
     children: React.ReactNode
 }) => {
 
-    const { user } = useCurrentUser()
     const queryClient = useQueryClient()
+    const { user } = useCurrentUser()
 
     const sidebarItems: TwitterSidebarButton[] = useMemo(() => [
         {

@@ -48,37 +48,41 @@ const extraResolvers = {
             return followingsList.map(el => el.following);
         }),
         recommendedUsers: (parent, _, ctx) => __awaiter(void 0, void 0, void 0, function* () {
-            if (!ctx.user)
-                return [];
-            const cachedValue = yield redis_1.default.get(`RECOMMENDED_USERS:${ctx.user.id}`);
-            if (cachedValue) {
-                console.log("cached Found");
-                return JSON.parse(cachedValue);
-            }
-            ;
-            yield new Promise((res, rej) => { setTimeout(() => res, 3000); });
-            const myFollowings = yield db_1.prismaClient.follows.findMany({
-                where: {
-                    follower: { id: ctx.user.id },
-                },
-                include: {
-                    following: {
-                        include: { followers: { include: { following: true } } },
+            try {
+                if (!ctx.user)
+                    return [];
+                const cachedValue = yield redis_1.default.get(`RECOMMENDED_USERS:${ctx.user.id}`);
+                if (cachedValue) {
+                    console.log("cached Found");
+                    return JSON.parse(cachedValue);
+                }
+                ;
+                const myFollowings = yield db_1.prismaClient.follows.findMany({
+                    where: {
+                        follower: { id: ctx.user.id },
                     },
-                },
-            });
-            const users = [];
-            for (const followings of myFollowings) {
-                for (const followingOfFollowedUser of followings.following.followers) {
-                    if (followingOfFollowedUser.following.id !== ctx.user.id &&
-                        myFollowings.findIndex((e) => (e === null || e === void 0 ? void 0 : e.followingId) === followingOfFollowedUser.following.id) < 0) {
-                        users.push(followingOfFollowedUser.following);
+                    include: {
+                        following: {
+                            include: { followers: { include: { following: true } } },
+                        },
+                    },
+                });
+                const users = [];
+                for (const followings of myFollowings) {
+                    for (const followingOfFollowedUser of followings.following.followers) {
+                        if (followingOfFollowedUser.following.id !== ctx.user.id &&
+                            myFollowings.findIndex((e) => (e === null || e === void 0 ? void 0 : e.followingId) === followingOfFollowedUser.following.id) < 0) {
+                            users.push(followingOfFollowedUser.following);
+                        }
                     }
                 }
+                console.log("No cached Found");
+                yield redis_1.default.set(`RECOMMENDED_USERS:${ctx.user.id}`, JSON.stringify(users));
+                return users;
             }
-            console.log("No cached Found");
-            yield redis_1.default.set(`RECOMMENDED_USERS:${ctx.user.id}`, JSON.stringify(users));
-            return users;
+            catch (error) {
+                return [];
+            }
         }),
     },
 };

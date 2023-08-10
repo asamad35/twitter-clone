@@ -36,7 +36,6 @@ class UserService {
         const { data } = await axios.get<GoogleTokenResult>(`${googleOauthURL}`)
 
         let user = await prismaClient.user.findUnique({ where: { email: data.email } })
-
         if (!user) {
             user = await prismaClient.user.create({
                 data: {
