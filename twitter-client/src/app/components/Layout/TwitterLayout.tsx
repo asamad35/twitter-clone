@@ -150,7 +150,10 @@ const TwitterLayout = ({
                         />
                     </div>
                 }
-                {user && <p onClick={() => localStorage.removeItem("twitter_google_token")}>Logout</p>}
+                {user && <button className=' py-2 px-4 bg-white text-black rounded-full mb-4' onClick={async () => {
+                    localStorage.removeItem("twitter_google_token")
+                    await queryClient.invalidateQueries(['current-user'])
+                }}>Logout</button>}
                 <div className="px-4 py-3 bg-slate-800 rounded-lg">
                     <h1 className="my-2 text-2xl mb-5">Users you may know</h1>
                     {user?.recommendedUsers?.map((el) => (
