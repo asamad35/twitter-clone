@@ -4,7 +4,7 @@ import { GraphQLClient } from "graphql-request";
 const isClient = typeof window !== "undefined"
 
 
-export const graphqlClient = new GraphQLClient('http://localhost:8000/graphql', {
+export const graphqlClient = new GraphQLClient(process.env.NEXT_PUBLIC_API_URL!, {
     headers: () => ({
         Authorization: `Bearer ${isClient ? window.localStorage.getItem('twitter_google_token') : ""}`
 
